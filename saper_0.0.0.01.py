@@ -1,24 +1,33 @@
 from random import choice
+import tkinter as tk
 
 
-class Cell:
+class Cell(tk.Button):
     '''Объявлен класс Cell, который является клеткой на поле'''
 
-    def __init__(self, mine, around_mines=0, fl_open=False, vis='*'):
-        self.around_mines = around_mines  # Колличество мин вокруг клетки, колличество считается в методе count_mine класса GamePole
-        self.mine = mine  # Является ли клетка миной(True - является миной)
-        self.fl_open = fl_open  # Открыта или нет клетка на игровом поле(False - закрыта)
-        self.vis = vis
+    def __init__(self, master=None, y=0, x=0, *args, **kwargs):
+        super(Cell, self).__init__(master, *args, **kwargs)
+        self.x = x
+        self.y = y
+        self.around_mines = 0  # Колличество мин вокруг клетки, колличество считается в методе count_mine класса Gamebutton
+        self.mine = False  # Является ли клетка миной(True - является миной)
+        self.fl_open = False  # Открыта или нет клетка на игровом поле(False - закрыта)
+        self.vis = '*'
 
-class GamePole:
-    '''Объявлен класс GamePole который является игровым полем и содержит основные методы
+    def __repr__(self):
+        return f'button {self.x} {self.y}'
+
+
+class Gamebutton:
+    '''Объявлен класс Gamebutton который является игровым полем и содержит основные методы
     для работы, а так же атрибуты для обязательной передачи:N - размероность поля NхN
                                                             М - колличество мин на поле'''
+    win = tk.Tk()
 
     def __init__(self, N, M):
         self.N = N
         self.M = M
-        self.pole = [[Cell(False) for _ in range(N)] for _ in range(N)]
+        self.button = [[Cell(Gamebutton.win, x=j, y=i, width=3) for i in range(self.N)] for j in range(self.N)]
         self.init()
         self.count_mines()
         self.count = 0
@@ -26,7 +35,7 @@ class GamePole:
     def init(self):
         x = 0
         while x != self.M:
-            c = choice(choice(self.pole))
+            c = choice(choice(self.button))
             if c.mine:
                 continue
             else:
@@ -34,14 +43,14 @@ class GamePole:
                 x += 1
 
     def count_mine(self, i, j):
-        if not self.pole[i][j].mine:
+        if not self.button[i][j].mine:
             for x in range(i - 1, i + 2):
                 for c in range(j - 1, j + 2):
                     if x not in range(0, self.N) or c not in range(0, self.N):
                         continue
                     else:
-                        if self.pole[x][c].mine:
-                            self.pole[i][j].around_mines += 1
+                        if self.button[x][c].mine:
+                            self.button[i][j].around_mines += 1
 
     def count_mines(self):
         for i in range(self.N):
@@ -49,33 +58,25 @@ class GamePole:
                 self.count_mine(i, j)
 
     def show(self):
-
         for i in range(self.N):
             for j in range(self.N):
-                if not self.pole[i][j].fl_open:
-                    print('#', end=' ')
-                else:
-                    print(self.pole[i][j].around_mines, end=' ')
-            print()
+                btn = self.button[i][j]
+                btn.grid(row=i, column=j)
 
     def show_all(self):
         for i in range(self.N):
             for j in range(self.N):
-                if self.pole[i][j].mine:
-                    print(self.pole[i][j].vis, end=' ')
+                if self.button[i][j].mine:
+                    print(self.button[i][j].vis, end=' ')
                 else:
-                    print(self.pole[i][j].around_mines, end=' ')
+                    print(self.button[i][j].around_mines, end=' ')
             print()
 
-gp = GamePole(3, 3)
-gp.show()
+    def start(self):
+        self.show()
+        self.win.mainloop()
+
+
+gp = Gamebutton(10, 12)
+gp.start()
 gp.show_all()
-while gp.count != gp.N ** 2 - gp.M:
-    x, y = int(input()), int(input())
-    gp.pole[x][y].fl_open = True
-    if gp.pole[x][y].mine:
-        gp.pole[x][y].vis = '@'
-        gp.show_all()
-        break
-    gp.show()
-    gp.count += 1
