@@ -4,13 +4,27 @@ import tkinter as tk
 
 class Cell(tk.Button):
     '''Объявлен класс Cell, который является клеткой на поле'''
-
+    open_cell = False
     def __init__(self, master, x, y, *args, **kwargs):
         super(Cell, self).__init__(master, width=3, font='Calibry 15 bold', *args, **kwargs)
         self.x = x
         self.y = y
         self.around_mines = 0  # Колличество мин вокруг клетки, колличество считается в методе count_mine класса Gamebutton
         self.mine = False  # Является ли клетка миной(True - является миной)
+
+
+
+
+    def round_cell(self, board):
+        if self.open_cell and self.around_mines == 0:
+            for i in range(self.x-1, self.x+2):
+                for j in range(self.y-1, self.y+2):
+                    if i not in range(0, len(board)) or j not in range(0, len(board)):
+                        continue
+                    else:
+                        board[i][j].open_cell = True
+                        board[i][j].config(text=board[i][j].around_mines, state=tk.DISABLED, background='blue')
+
 
     def __repr__(self):
         return f'button {self.x} {self.y}'
@@ -41,10 +55,13 @@ class Gamebutton:
     def click_button(self, clicked_cell: Cell):
         if clicked_cell.mine:
             clicked_cell.config(text='x', state=tk.DISABLED, background='red')
+            clicked_cell.open_cell = True
         else:
             clicked_cell.config(text=clicked_cell.around_mines, state=tk.DISABLED, background='blue')
+            clicked_cell.open_cell = True
+            clicked_cell.round_cell(self.button)
+            print(repr(self.button[clicked_cell.x][clicked_cell.y].open_cell))
 
-            # clicked_cell.config(text=clicked_cell.around_mines, state=tk.DISABLED, background='blue')
 
     def place_mines(self):
         x = 0
