@@ -56,11 +56,36 @@ class Gamebutton:
             clicked_cell.config(text='x', state=tk.DISABLED, background='red')
             clicked_cell.open_cell = True
         else:
-            clicked_cell.config(text=clicked_cell.around_mines, state=tk.DISABLED, background='white',
-                                disabledforeground=clicked_cell.colors[clicked_cell.around_mines])
+            # clicked_cell.config(text=clicked_cell.around_mines, state=tk.DISABLED, background='white',
+            #                     disabledforeground=clicked_cell.colors[clicked_cell.around_mines])
             clicked_cell.open_cell = True
-            clicked_cell.round_cell(self.button)
+            # clicked_cell.round_cell(self.button)
+            self.open_around(clicked_cell)
             print(repr(self.button[clicked_cell.x][clicked_cell.y].open_cell))
+        clicked_cell.config(relief=tk.SUNKEN)
+
+    def open_around(self, cell: Cell):
+        list_Cell = [cell]
+        while list_Cell:
+
+            but = list_Cell.pop()
+            if but.around_mines:
+                but.open_cell = True
+                but.config(text=but.around_mines, disabledforeground=but.colors[but.around_mines], state=tk.DISABLED)
+            else:
+                but.open_cell = True
+                but.config(text='', state=tk.DISABLED)
+            if not but.around_mines:
+                x, y = but.x, but.y
+                for i in range(x-1, x+2):
+                    for j in range(y-1, y+2):
+                        if i not in range(0, len(self.button)) or j not in range(0, len(self.button)):
+                            continue
+                        else:
+                            if self.button[i][j] not in list_Cell and self.button[i][j].open_cell is False:
+                                list_Cell.append(self.button[i][j])
+            but.config(relief=tk.SUNKEN)
+
 
     def place_mines(self):
         x = 0
