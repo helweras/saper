@@ -1,5 +1,6 @@
 from random import choice
 import tkinter as tk
+from tkinter.messagebox import showinfo
 
 
 class Cell(tk.Button):
@@ -37,6 +38,7 @@ class Gamebutton:
                                                             mines - колличество мин на поле'''
     win = tk.Tk()
     size = 10
+    GAME_OVER = False
 
     def __init__(self, mines):
         self.mines = mines
@@ -45,7 +47,7 @@ class Gamebutton:
             tmp = []
             for j in range(self.size):
                 btn = Cell(Gamebutton.win, x=i, y=j)
-                btn.config(command=lambda button=btn: self.click_button(button), disabledforeground='black')
+                btn.config(command=lambda button=btn: self.click_button(button), disabledforeground='black', background='white')
                 tmp.append(btn)
             self.button.append(tmp)
 
@@ -53,15 +55,16 @@ class Gamebutton:
 
     def click_button(self, clicked_cell: Cell):
         if clicked_cell.mine:
-            clicked_cell.config(text='x', state=tk.DISABLED, background='red')
-            clicked_cell.open_cell = True
+            # clicked_cell.config(text='x', state=tk.DISABLED, background='red')
+            # clicked_cell.open_cell = True
+            self.open_all()
+            showinfo('Game over', 'Адам - гей')
         else:
             # clicked_cell.config(text=clicked_cell.around_mines, state=tk.DISABLED, background='white',
             #                     disabledforeground=clicked_cell.colors[clicked_cell.around_mines])
             clicked_cell.open_cell = True
             # clicked_cell.round_cell(self.button)
             self.open_around(clicked_cell)
-            print(repr(self.button[clicked_cell.x][clicked_cell.y].open_cell))
         clicked_cell.config(relief=tk.SUNKEN)
 
     def open_around(self, cell: Cell):
@@ -77,15 +80,14 @@ class Gamebutton:
                 but.config(text='', state=tk.DISABLED)
             if not but.around_mines:
                 x, y = but.x, but.y
-                for i in range(x-1, x+2):
-                    for j in range(y-1, y+2):
+                for i in range(x - 1, x + 2):
+                    for j in range(y - 1, y + 2):
                         if i not in range(0, len(self.button)) or j not in range(0, len(self.button)):
                             continue
                         else:
                             if self.button[i][j] not in list_Cell and self.button[i][j].open_cell is False:
                                 list_Cell.append(self.button[i][j])
             but.config(relief=tk.SUNKEN)
-
 
     def place_mines(self):
         x = 0
@@ -127,11 +129,48 @@ class Gamebutton:
                     print(self.button[i][j].around_mines, end=' ')
             print()
 
+    def open_all(self):
+        for list_but in self.button:
+            for but in list_but:
+                but.open_cell = True
+                if but.mine:
+                    but.config(relief=tk.SUNKEN, text='*', background='red',
+                               state=tk.DISABLED)
+                else:
+                    if but.around_mines:
+                        but.config(relief=tk.SUNKEN, text=but.around_mines,
+                                   disabledforeground=but.colors[but.around_mines],
+                                   state=tk.DISABLED)
+                    else:
+                        but.config(relief=tk.SUNKEN, text='', state=tk.DISABLED)
+
+    def get_menu(self):
+        menubar = tk.Menu(self.win)
+        self.win.config(menu=menubar)
+
+        setting_menu = tk.Menu(menubar, tearoff=0)
+        setting_menu.add_command(label='game')
+        setting_menu.add_command(label='setting')
+        setting_menu.add_command(label='restart', command=self.restart)
+        menubar.add_cascade(label='setting', menu=setting_menu)
+
+    def restart(self):
+        for butts in self.button:
+            for but in butts:
+                but.open_cell = False
+                but.mine = False
+                but.config(state=tk.NORMAL, text='', relief=tk.RAISED, background='white')
+                but.around_mines = 0
+        self.place_mines()
+        self.count_mines()
+
+
+
     def start(self):
         self.place_mines()
         self.count_mines()
         self.show()
-        self.show_all()
+        self.get_menu()
         self.win.mainloop()
 
 
