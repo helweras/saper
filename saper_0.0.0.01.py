@@ -14,7 +14,7 @@ class Cell(tk.Button):
         super(Cell, self).__init__(master, width=3, font='Calibry 15 bold', *args, **kwargs)
         self.x = x
         self.y = y
-        self.around_mines = 0  # Колличество мин вокруг клетки, колличество считается в методе count_mine класса Gamebutton
+        self.around_mines = 0  # Кол-во мин вокруг клетки, колличество считается в методе count_mine класса Gamebutton
         self.mine = False  # Является ли клетка миной(True - является миной)
 
     def round_cell(self, board):
@@ -28,42 +28,49 @@ class Cell(tk.Button):
                         board[i][j].config(text=board[i][j].around_mines, state=tk.DISABLED, background='white',
                                            disabledforeground=self.colors[board[i][j].around_mines])
 
-    def __repr__(self):
-        return f'button {self.x} {self.y}'
-
 
 class Gamebutton:
     '''Объявлен класс Gamebutton который является игровым полем и содержит основные методы
     для работы, а так же атрибуты для обязательной передачи:size - размероность поля NхN
                                                             mines - колличество мин на поле'''
     win = tk.Tk()
-    size = 10
     GAME_OVER = False
+    found_mines = 0
 
-    def __init__(self, mines):
+    def __init__(self, mines=10, size=10):
         self.mines = mines
+        self.size = size
         self.button = []
         for i in range(self.size):
             tmp = []
             for j in range(self.size):
                 btn = Cell(Gamebutton.win, x=i, y=j)
-                btn.config(command=lambda button=btn: self.click_button(button), disabledforeground='black', background='white')
+                btn.config(command=lambda button=btn: self.click_button(button), disabledforeground='black',
+                           background='white')
+                btn.bind('<Button-3>', self.right_click)
                 tmp.append(btn)
             self.button.append(tmp)
 
         self.count = 0
 
+    def right_click(self, event):
+        get_event = event.widget
+        if get_event['state'] == 'normal':
+            get_event['state'] = 'disabled'
+            get_event['disabledforeground'] = 'red'
+            get_event['text'] = '☪'
+            self.found_mines += 1
+        elif get_event['text'] == '☪':
+            get_event['state'] = 'normal'
+            get_event['text'] = ''
+            self.found_mines += 1
+
     def click_button(self, clicked_cell: Cell):
         if clicked_cell.mine:
-            # clicked_cell.config(text='x', state=tk.DISABLED, background='red')
-            # clicked_cell.open_cell = True
             self.open_all()
-            showinfo('Game over', 'Адам - гей')
+            showinfo('Game over', 'Саня - лох')
         else:
-            # clicked_cell.config(text=clicked_cell.around_mines, state=tk.DISABLED, background='white',
-            #                     disabledforeground=clicked_cell.colors[clicked_cell.around_mines])
             clicked_cell.open_cell = True
-            # clicked_cell.round_cell(self.button)
             self.open_around(clicked_cell)
         clicked_cell.config(relief=tk.SUNKEN)
 
@@ -144,27 +151,47 @@ class Gamebutton:
                     else:
                         but.config(relief=tk.SUNKEN, text='', state=tk.DISABLED)
 
+    def setting(self):
+        win_sett = tk.Toplevel(self.win)
+        win_sett.geometry(f'300x200')
+        win_sett.wm_title('Настройки')
+        tk.Label(win_sett, text='Мины').grid(row=0, column=1)
+        tk.Label(win_sett, text='Размер поля').grid(row=1, column=1)
+        mine_new = tk.Entry(win_sett)
+        size_new = tk.Entry(win_sett)
+
+        def use_new_setting():
+            try:
+                mine = int(mine_new.get())
+                size = int(size_new.get())
+                self.restart(mine, size)
+                win_sett.destroy()
+            except ValueError:
+                win_sett.destroy()
+
+        mine_new.grid(row=0, column=0, padx=20, pady=25)
+        size_new.grid(row=1, column=0, padx=20, pady=25)
+        but_ok = tk.Button(win_sett, text='Ok', width=3)
+        but_ok.grid(row=2, column=2, sticky='e')
+        but_ok.config(command=use_new_setting)
+
     def get_menu(self):
         menubar = tk.Menu(self.win)
         self.win.config(menu=menubar)
 
         setting_menu = tk.Menu(menubar, tearoff=0)
-        setting_menu.add_command(label='game')
-        setting_menu.add_command(label='setting')
+        setting_menu.add_command(label='game', command=self.setting)
         setting_menu.add_command(label='restart', command=self.restart)
         menubar.add_cascade(label='setting', menu=setting_menu)
 
-    def restart(self):
+    def restart(self, mines=10, size=10):
         for butts in self.button:
             for but in butts:
-                but.open_cell = False
-                but.mine = False
-                but.config(state=tk.NORMAL, text='', relief=tk.RAISED, background='white')
-                but.around_mines = 0
+                but.destroy()
+        self.__init__(mines, size)
         self.place_mines()
         self.count_mines()
-
-
+        self.show()
 
     def start(self):
         self.place_mines()
@@ -174,5 +201,5 @@ class Gamebutton:
         self.win.mainloop()
 
 
-gp = Gamebutton(10)
+gp = Gamebutton()
 gp.start()
