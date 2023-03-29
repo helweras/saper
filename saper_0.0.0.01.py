@@ -8,7 +8,7 @@ class Cell(tk.Button):
     open_cell = False
     colors = {0: '#8A2BE2', 1: '#0000FF', 2: '#008000', 3: '#E30205', 4: '#090B5D', 5: '#5C3624', 6: '#30D5C8',
               7: '#050506',
-              8: '#C5D0E6'}
+              8: '#C5D0E6', 9: 'red'}
 
     def __init__(self, master, x, y, *args, **kwargs):
         super(Cell, self).__init__(master, width=3, font='Calibry 15 bold', *args, **kwargs)
@@ -41,6 +41,7 @@ class Gamebutton:
         self.mines = mines
         self.size = size
         self.button = []
+        self.free_islam = mines
         for i in range(self.size):
             tmp = []
             for j in range(self.size):
@@ -55,15 +56,30 @@ class Gamebutton:
 
     def right_click(self, event):
         get_event = event.widget
-        if get_event['state'] == 'normal':
-            get_event['state'] = 'disabled'
-            get_event['disabledforeground'] = 'red'
-            get_event['text'] = '☪'
-            self.found_mines += 1
-        elif get_event['text'] == '☪':
+
+        def state():
+            """Функция для сокращения строк кода.
+            Описывает поведения кнопки при нажатии пкм когда на ней стоит знак шахида"""
+            get_event.open_cell = False
             get_event['state'] = 'normal'
             get_event['text'] = ''
-            self.found_mines += 1
+            self.free_islam += 1
+            if get_event.mine:
+                self.found_mines -= 1
+
+        if self.free_islam > 0:
+            if get_event['state'] == 'normal':
+                get_event['state'] = 'disabled'
+                get_event['disabledforeground'] = 'red'
+                get_event['text'] = '☪'
+                get_event.open_cell = True
+                self.free_islam -= 1
+                if get_event.mine:
+                    self.found_mines += 1
+            elif get_event['text'] == '☪':
+                state()
+        elif self.free_islam == 0 and get_event['text'] == '☪':
+            state()
 
     def click_button(self, clicked_cell: Cell):
         if clicked_cell.mine:
@@ -142,7 +158,7 @@ class Gamebutton:
                 but.open_cell = True
                 if but.mine:
                     but.config(relief=tk.SUNKEN, text='*', background='red',
-                               state=tk.DISABLED)
+                               state=tk.DISABLED, disabledforeground='black')
                 else:
                     if but.around_mines:
                         but.config(relief=tk.SUNKEN, text=but.around_mines,
